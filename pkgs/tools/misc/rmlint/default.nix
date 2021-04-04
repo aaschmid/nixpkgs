@@ -18,6 +18,8 @@
 , wrapGAppsHook
 , withGui ? false }:
 
+assert withGui -> !stdenv.isDarwin;
+
 with lib;
 stdenv.mkDerivation rec {
   pname = "rmlint";
@@ -59,7 +61,9 @@ stdenv.mkDerivation rec {
 
   # this doesn't seem to support configureFlags, and appends $out afterwards,
   # so add the --without-gui in front of it
-  prefixKey = lib.optionalString (!withGui) " --without-gui " + "--prefix=";
+  prefixKey = lib.optionalString (!withGui) " --without-gui "
+    + lib.optionalString (stdenv.isDarwin) " --without-gettext "
+    + "--prefix=";
 
   # in GUI mode, this shells out to itself, and tries to import python modules
   postInstall = lib.optionalString withGui ''
@@ -70,8 +74,8 @@ stdenv.mkDerivation rec {
   meta = {
     description = "Extremely fast tool to remove duplicates and other lint from your filesystem";
     homepage = "https://rmlint.readthedocs.org";
-    platforms = platforms.linux;
+    platforms = with platforms; linux ++ darwin;
     license = licenses.gpl3;
-    maintainers = [ maintainers.koral ];
+    maintainers = with maintainers; [ aaschmid koral ];
   };
 }
